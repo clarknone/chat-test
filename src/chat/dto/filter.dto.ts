@@ -5,15 +5,3 @@ export class ChatFilterDto {
   @IsOptional()
   topic: string;
 }
-
-export class CreateChatTopicDto {
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-}
-
-export class CreateChatInviteDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-}
