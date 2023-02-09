@@ -22,18 +22,19 @@ export class ChatTopic {
 
 @Schema({ timestamps: true })
 export class ChatInvite {
+
   @Prop({ type: Types.ObjectId, ref: 'User', require: true })
   user: User;
 
   @Prop({
     type: String,
-    lowercase: true,
+    required: [true, 'Email is required'],
+    transform: (val: string) => (val ? val.toLowerCase() : ''),
     validate: [
-      { validator: isEmail, message: (val) => 'please enter a valid email' },
+      { validator: isEmail, message: () => 'please enter a valid email' },
     ],
   })
   email: string;
-
 
   @Prop({ type: String })
   fullname: string;
@@ -50,23 +51,26 @@ export class Chat {
   @Prop({ type: Types.ObjectId, ref: 'ChatTopic' })
   topic: ChatTopic;
 
-  @Prop({ type: Types.ObjectId, ref: 'ChatTopic' })
+  @Prop({ type: Types.ObjectId, ref: 'ChatInvite' })
   invite: ChatInvite;
 
   // @Prop({
   //   type: String,
-  //   lowercase: true,
+  //   required: [true, 'Email is required'],
+  //   transform: (val: string) => (val ? val.toLowerCase() : ''),
   //   validate: [
   //     { validator: isEmail, message: () => 'please enter a valid email' },
   //   ],
   // })
-  // email: string;
 
   @Prop({ type: String })
   message: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'ChatFile' })
-  file: ChatFile;
+  
+  // @Prop({ type: Types.ObjectId, ref: 'ChatFile' })
+  // file: ChatFile;
+  
+  @Prop({ type: String })
+  file?: string;
 
   @Prop({ type: Boolean, default: false })
   isAnonymous: boolean;

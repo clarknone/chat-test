@@ -41,8 +41,6 @@ export class AuthService {
         }
 
         if (await bcrypt.compare(data.password, user.password)) {
-          user.attempt = 0;
-          await user.save();
           return this.signUser(user);
         }
         throw new ServiceException({ error: 'incorrect password' });
@@ -56,16 +54,13 @@ export class AuthService {
     authUser: IAuthUser,
     data: EditProfileDto,
   ): Promise<IAuthUser> {
-    return this.UserSchema.findByIdAndUpdate(authUser.id, { ...data }).select([
-      'fullname',
-      'avatar',
-      'email',
-    ])``
+    return this.UserSchema.findByIdAndUpdate(authUser.id, { ...data })
+      .select(['fullname', 'avatar', 'email'])
       .then(async (user) => {
         if (!user) {
           throw new ServiceException({ error: 'User not found' });
         }
-        return user;
+        return this.signUser(user);
       })
       .catch((e) => {
         throw new ServiceException({ error: extractErrorMessage(e) });
@@ -79,7 +74,7 @@ export class AuthService {
         if (!user) {
           throw new ServiceException({ error: 'User not found' });
         }
-        return user;
+        return this.signUser(user);
       })
       .catch((e) => {
         throw new ServiceException({ error: extractErrorMessage(e) });

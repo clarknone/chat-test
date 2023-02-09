@@ -1,6 +1,7 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TokenExpiredError } from 'jsonwebtoken';
+import { Observable } from 'rxjs';
 
 export class JwtAuthGuard extends AuthGuard('jwt') {
   handleRequest(err: any, user: any, info: any, context: any, status: any) {
@@ -10,5 +11,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('None or unidentified token');
     }
     return super.handleRequest(err, user, info, context, status);
+  }
+}
+
+export class JwtAuthPublicGuard extends AuthGuard('jwt') {
+  handleRequest(err: any, user: any, info: any, context: any, status: any) {
+    // console.log({ err, user, info, context, status });
+    return super.handleRequest(null, user || {}, {}, context, status);
   }
 }

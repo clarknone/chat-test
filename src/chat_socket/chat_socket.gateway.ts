@@ -1,34 +1,36 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  WebSocketServer,
+  WsResponse,
+} from '@nestjs/websockets';
+import { from, map, Observable } from 'rxjs';
+import { Server } from 'socket.io';
 import { ChatSocketService } from './chat_socket.service';
 import { CreateChatSocketDto } from './dto/create-chat_socket.dto';
 import { UpdateChatSocketDto } from './dto/update-chat_socket.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class ChatSocketGateway {
   constructor(private readonly chatSocketService: ChatSocketService) {}
+  @WebSocketServer()
+  server: Server;
 
-  @SubscribeMessage('createChatSocket')
-  create(@MessageBody() createChatSocketDto: CreateChatSocketDto) {
-    return this.chatSocketService.create(createChatSocketDto);
+  @SubscribeMessage('events')
+  handleEvent(@MessageBody() data: string) {
+    console.log({ data });
+    // this.server.emit()
+    const resp = { event: 'this is message', data: data };
+    this.server.sockets.emit('events', "data");
   }
 
-  @SubscribeMessage('findAllChatSocket')
-  findAll() {
-    return this.chatSocketService.findAll();
-  }
-
-  @SubscribeMessage('findOneChatSocket')
-  findOne(@MessageBody() id: number) {
-    return this.chatSocketService.findOne(id);
-  }
-
-  @SubscribeMessage('updateChatSocket')
-  update(@MessageBody() updateChatSocketDto: UpdateChatSocketDto) {
-    return this.chatSocketService.update(updateChatSocketDto.id, updateChatSocketDto);
-  }
-
-  @SubscribeMessage('removeChatSocket')
-  remove(@MessageBody() id: number) {
-    return this.chatSocketService.remove(id);
+  @SubscribeMessage('identity')
+  async identity(@MessageBody() data: number): Promise<number> {
+    return 434343;
   }
 }
