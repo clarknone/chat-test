@@ -7,17 +7,14 @@ import { IAuthUser } from 'src/helper/interfaces/auth/auth.interface';
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendUserConfirmation(
-    user: IAuthUser,
-    invite: ChatInviteDocument,
-  ) {
-    const url = `example.com/auth/confirm?token=${invite._id}`;
+  async sendUserConfirmation(user: IAuthUser, invite: ChatInviteDocument) {
+    const url = `http://chat.onrender.com/chat/${invite.topic}?invite=${invite._id}`;
 
     await this.mailerService.sendMail({
       to: invite.email,
       // from: '"Support Team" <support@example.com>', // override default from
-      subject: `Invitations To Chat With On Chat Test`,
-      text: `You have been invited by ${user.fullname} to chat on CHAT_TEST\n\nClick <a href="${url}">here</a> to chat`,
+      subject: `Invitations To Chat On Chat Test`,
+      text: `You have been invited by ${user.fullname} to chat on CHAT TEST\n\nClick <a href="${url}">here</a> to chat`,
     });
   }
 }

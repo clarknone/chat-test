@@ -64,7 +64,7 @@ export class AuthService {
       })
       .catch((e) => {
         throw new ServiceException({ error: extractErrorMessage(e) });
-      });
+      }); 
   }
 
   async profile(data: IAuthUser): Promise<IAuthUser> {
@@ -96,6 +96,7 @@ export class AuthService {
       email: user.email,
       id: user._id,
       fullname: user.fullname,
+      avatar: user.avatar,
     };
 
     return authUser;
