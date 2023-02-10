@@ -22,7 +22,6 @@ export class ChatTopic {
 
 @Schema({ timestamps: true })
 export class ChatInvite {
-
   @Prop({ type: Types.ObjectId, ref: 'User', require: true })
   user: User;
 
@@ -39,8 +38,26 @@ export class ChatInvite {
   @Prop({ type: String })
   fullname: string;
 
+  @Prop({ type: String })
+  topic: ChatTopic | Types.ObjectId;
+
   @Prop({ type: Boolean, default: false })
   status: boolean;
+}
+
+@Schema({ timestamps: true })
+export class ChatFile {
+  @Prop({ type: String, required: [true, 'url is required'] })
+  url: string;
+
+  @Prop({ type: String, required: [true, 'url is required'] })
+  pid: string;
+
+  @Prop({ type: String })
+  type: string;
+
+  @Prop({ type: String })
+  format: string;
 }
 
 @Schema({ timestamps: true })
@@ -49,46 +66,22 @@ export class Chat {
   user: User;
 
   @Prop({ type: Types.ObjectId, ref: 'ChatTopic' })
-  topic: ChatTopic;
+  topic: ChatTopic | Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'ChatInvite' })
   invite: ChatInvite;
 
-  // @Prop({
-  //   type: String,
-  //   required: [true, 'Email is required'],
-  //   transform: (val: string) => (val ? val.toLowerCase() : ''),
-  //   validate: [
-  //     { validator: isEmail, message: () => 'please enter a valid email' },
-  //   ],
-  // })
-
   @Prop({ type: String })
   message: string;
-  
-  // @Prop({ type: Types.ObjectId, ref: 'ChatFile' })
-  // file: ChatFile;
-  
-  @Prop({ type: String })
-  file?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'ChatFile' })
+  file: ChatFile;
 
   @Prop({ type: Boolean, default: false })
   isAnonymous: boolean;
 
   @Prop({ type: Number, default: 0 })
   type: number;
-}
-
-@Schema({ timestamps: true })
-export class ChatFile {
-  @Prop({ type: Types.ObjectId, ref: 'Chat', require: true })
-  chat: Chat;
-
-  @Prop({ type: String, required: [true, 'url is required'] })
-  url: string;
-
-  @Prop({ type: String, required: [true, 'message is required'] })
-  type: string;
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);

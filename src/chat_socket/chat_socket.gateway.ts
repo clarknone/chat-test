@@ -1,36 +1,72 @@
+import { UseGuards } from '@nestjs/common';
 import {
   WebSocketGateway,
   SubscribeMessage,
   MessageBody,
   WebSocketServer,
-  WsResponse,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { from, map, Observable } from 'rxjs';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
+import { CreateChatDto } from 'src/chat/dto/create-chat.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { ChatSocketService } from './chat_socket.service';
-import { CreateChatSocketDto } from './dto/create-chat_socket.dto';
-import { UpdateChatSocketDto } from './dto/update-chat_socket.dto';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
 })
-export class ChatSocketGateway {
-  constructor(private readonly chatSocketService: ChatSocketService) {}
+export class ChatSocketGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('events')
-  handleEvent(@MessageBody() data: string) {
-    console.log({ data });
-    // this.server.emit()
-    const resp = { event: 'this is message', data: data };
-    this.server.sockets.emit('events', "data");
+  constructor(
+    private cloudinaryService: CloudinaryService,
+    private readonly chatSocketService: ChatSocketService,
+  ) {}
+
+  handleDisconnect(client: Socket) {
+    // client.disconnect()
+    // throw new Error('Method not implemented.');
   }
 
-  @SubscribeMessage('identity')
-  async identity(@MessageBody() data: number): Promise<number> {
-    return 434343;
+  handleConnection(client: Socket, ...args: any[]) {
+    const topic = client.handshake.query['topic'];
+    this.chatSocketService
+      .joinTopic(topic as string)
+      .then((hasJoined) => {
+        if (hasJoined) {
+          client.join(topic);
+        } else {
+          this.server.to(client.id).emit('error', 'invalid topic');
+          client.disconnect();
+        }
+      })
+      .catch((e) => {
+        // console.log({});
+      });
+  }
+
+  @SubscribeMessage('message')
+  async handleEvent(
+    @MessageBody() data: CreateChatDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    return this.chatSocketService
+      .getUserFromID(data.user)
+      .then(async (user) => {
+        return this.chatSocketService.sendMessage(user, data).then((chat) => {
+          return this.server.sockets
+            .to(chat.topic.toString())
+            .emit('message', chat);
+        });
+      })
+      .catch((e) => {
+        this.server.to(client.id).emit('error', 'failed to send message');
+      });
   }
 }

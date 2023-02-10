@@ -4,6 +4,10 @@ export class CreateChatDto {
   @IsString()
   @IsOptional()
   invite?: string;
+  
+  @IsString()
+  @IsOptional()
+  user?: string;
 
   @IsString()
   @IsOptional()
@@ -13,7 +17,7 @@ export class CreateChatDto {
   @IsNotEmpty()
   topic: string;
 
-  @IsString()
+  // @IsString()
   @IsOptional()
   file?: string;
 }
@@ -28,6 +32,10 @@ export class CreateChatInviteDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  topic: string;
 
   @IsString()
   @IsNotEmpty()

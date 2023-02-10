@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UploadApiResponse } from 'cloudinary';
 import { Model } from 'mongoose';
 import { ServiceException } from 'src/helper/exceptions/service.exception';
 import { IAuthUser } from 'src/helper/interfaces/auth/auth.interface';
@@ -40,12 +41,20 @@ export class ChatService {
     private mailService: MailService,
   ) {}
 
-  sendMessage(createChatDto: CreateChatDto, user?: IAuthUser) {
+  async sendMessage(
+    createChatDto: CreateChatDto,
+    user?: IAuthUser,
+  ): Promise<ChatDocument> {
     return this.ChatModel.create({
       ...createChatDto,
-      user: user.id || null,
+      user: user?.id || null,
     }).then((chat) => {
       //uploadFile
+      return chat.populate([
+        { path: 'user', select: ['fullname', 'email'] },
+        { path: 'invite', select: ['fullname', 'email'] },
+        { path: 'file', select: ['url', 'type', 'format'] },
+      ]);
     });
   }
 
@@ -53,14 +62,14 @@ export class ChatService {
     return this.ChatModel.find({ ...filter }).populate([
       { path: 'user', select: ['fullname', 'email'] },
       { path: 'invite', select: ['fullname', 'email'] },
-      // { path: 'ChatFile', select: ['url', 'type'], strictPopulate: false },
+      { path: 'file', select: ['url', 'type', 'format'] },
     ]);
   }
 
   async inviteUser(user: IAuthUser, data: CreateChatInviteDto) {
     return this.ChatInviteModel.create({ ...data, user: user.id }).then(
       (invite) => {
-        return this.mailService.sendUserConfirmation(user,invite)
+        return this.mailService.sendUserConfirmation(user, invite);
         //send Email
       },
     );
@@ -90,6 +99,15 @@ export class ChatService {
     return this.ChatTopicModel.create({ ...data, user: user.id });
   }
 
+  uploadFile(cloudinaryResponse: UploadApiResponse) {
+    return this.ChatFileModel.create({
+      url: cloudinaryResponse.secure_url,
+      pid: cloudinaryResponse.public_id,
+      type: cloudinaryResponse.resource_type,
+      format: cloudinaryResponse.format,
+    });
+  }
+
   async deleteTopic(user: IAuthUser, id: string) {
     return this.ChatTopicModel.findById(id).then((topic) => {
       if (!topic) {
@@ -100,7 +118,9 @@ export class ChatService {
           status: 403,
         });
       } else {
-        return topic.delete();
+        return this.ChatModel.deleteMany({ topic: topic._id }).then(() => {
+          return topic.delete();
+        });
       }
     });
   }
