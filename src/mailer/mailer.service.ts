@@ -8,7 +8,7 @@ export class MailService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: IAuthUser, invite: ChatInviteDocument) {
-    const url = `http://chat.onrender.com/chat/${invite.topic}?invite=${invite._id}`;
+    const url = `https://chat-test-87rk.onrender.com/chat/${invite.topic}?invite=${invite._id}`;
 
     await this.mailerService.sendMail({
       to: invite.email,
